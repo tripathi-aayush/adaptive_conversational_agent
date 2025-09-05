@@ -1,7 +1,4 @@
-altair==5.5.0
-numpy==2.3.2
-pandas==2.3.2
-protobuf==6.32.0
-python-dotenv==1.1.1
+streamlit
+google-generativeai
+python-dotenv
 spacy==3.8.7
-streamlit==1.48.1
