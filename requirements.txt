@@ -1,4 +1,5 @@
 streamlit
 google-generativeai
 python-dotenv
-spacy==3.8.7
+spacy==3.7.5
+https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1.tar.gz
