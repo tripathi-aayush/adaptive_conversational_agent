@@ -19,7 +19,7 @@ def main():
     
     try:
         # Run streamlit
-        subprocess.run([sys.executable, "-m", "streamlit", "run", "streamlit_app.py"], check=True)
+        subprocess.run([sys.executable, "-m", "streamlit", "run", "src/streamlit_app.py"], check=True)
     except KeyboardInterrupt:
         print("\n👋 Thanks for using the Interview Preparation Assistant!")
     except subprocess.CalledProcessError as e:
