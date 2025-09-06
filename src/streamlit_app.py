@@ -15,6 +15,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- NEW: Logic to handle the reset button click ---
+# This checks if the page was reloaded with a "reset=true" command
+if st.query_params.get("reset"):
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.query_params.clear()
+    st.rerun()
+
 # Custom CSS for better UI
 st.markdown("""
 <style>
@@ -76,6 +84,24 @@ st.markdown("""
         padding: 10px;
         font-size: 0.9em;
     }
+    /* --- NEW: Style for the custom reset button --- */
+    .reset-button {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        background-color: #A23B72; /* A different color to stand out */
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 8px;
+        z-index: 999;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -94,6 +120,13 @@ def main():
     st.markdown('<h1 class="main-header">🎯 Interview Preparation Assistant</h1>', unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; color: #666;">Master technical concepts through adaptive questioning and guided learning</p>', unsafe_allow_html=True)
     
+    # --- NEW: Custom HTML for the fixed reset button ---
+    st.markdown("""
+        <a href="/?reset=true" target="_self">
+            <button class="reset-button">🔄 Reset Chat</button>
+        </a>
+    """, unsafe_allow_html=True)
+
     # Sidebar for controls
     with st.sidebar:
         st.header("Session Controls")
@@ -113,14 +146,7 @@ def main():
             </div>
             """, unsafe_allow_html=True)
         
-        # --- NEW: Added a separator for clarity ---
-        st.markdown("---")
-        
-        # --- CHANGED: Made the button primary for better visibility ---
-        if st.button("🔄 Reset Session", type="primary", use_container_width=True):
-            for key in list(st.session_state.keys()):
-                del st.session_state[key]
-            st.rerun()
+        # --- REMOVED: The old reset button is gone from here ---
     
     # Main content area
     col1, col2, col3 = st.columns([1, 3, 1])
