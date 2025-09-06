@@ -15,20 +15,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- NEW: Logic to handle the reset button click ---
-# This checks if the page was reloaded with a "reset=true" command
-if st.query_params.get("reset"):
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.query_params.clear()
-    st.rerun()
-
 # Custom CSS for better UI
 st.markdown("""
 <style>
-    /* This new, more specific rule hides ONLY the GitHub icon */
-    a[title="View source"] {
-      display: none !important;
+    /* Hides the Streamlit toolbar containing the GitHub icon */
+    div[data-testid="stToolbar"] {
+        visibility: hidden;
+        height: 0%;
+        position: fixed;
     }
     .main-header {
         text-align: center;
@@ -84,24 +78,6 @@ st.markdown("""
         padding: 10px;
         font-size: 0.9em;
     }
-    /* --- NEW: Style for the custom reset button --- */
-    .reset-button {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        background-color: #A23B72; /* A different color to stand out */
-        color: white;
-        border: none;
-        padding: 10px 15px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-        border-radius: 8px;
-        z-index: 999;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -120,13 +96,6 @@ def main():
     st.markdown('<h1 class="main-header">🎯 Interview Preparation Assistant</h1>', unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; color: #666;">Master technical concepts through adaptive questioning and guided learning</p>', unsafe_allow_html=True)
     
-    # --- NEW: Custom HTML for the fixed reset button ---
-    st.markdown("""
-        <a href="/?reset=true" target="_self">
-            <button class="reset-button">🔄 Reset Chat</button>
-        </a>
-    """, unsafe_allow_html=True)
-
     # Sidebar for controls
     with st.sidebar:
         st.header("Session Controls")
@@ -146,7 +115,11 @@ def main():
             </div>
             """, unsafe_allow_html=True)
         
-        # --- REMOVED: The old reset button is gone from here ---
+        # Reset button
+        if st.button("🔄 Reset Session", type="secondary"):
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.rerun()
     
     # Main content area
     col1, col2, col3 = st.columns([1, 3, 1])
@@ -204,7 +177,7 @@ def main():
                 key="answer_input"
             )
             
-            # Create columns for button and spinner
+            # --- NEW: Create columns for button and spinner ---
             button_col, spinner_col = st.columns([1, 3])
 
             with button_col:
@@ -212,6 +185,7 @@ def main():
 
             if submit_clicked:
                 if answer.strip():
+                    # --- NEW: Show spinner while processing ---
                     with spinner_col:
                         with st.spinner("Thinking..."):
                             current_question = st.session_state.chat_history[-1]['content'] if st.session_state.chat_history else ""
@@ -244,7 +218,7 @@ def main():
                             if concept:
                                 st.session_state.chatbot.update_progress(concept, score)
 
-                            # Save results to session state to display after the rerun
+                            # --- This section now happens inside the spinner ---
                             if score is not None:
                                 st.session_state.display_score = score
                             if feedback:
@@ -259,13 +233,11 @@ def main():
                             )
                             st.session_state.chat_history.append(next_bot_message)
                     
-                    # Clear the text input and rerun
-                    st.session_state.answer_input = ""
                     st.rerun()
                 else:
                     st.error("Please provide an answer!")
 
-            # Display results from the previous run that were saved in session state
+            # --- This block now displays the results saved from the previous run ---
             if 'display_score' in st.session_state and st.session_state.display_score is not None:
                 st.markdown(f'<div class="score-display">Score: {st.session_state.display_score}/100</div>', unsafe_allow_html=True)
                 del st.session_state.display_score
@@ -289,7 +261,7 @@ def main():
                 del st.session_state.display_correct_answer
 
 
-    # Add a footer at the end
+    # --- NEW: Add a footer at the end ---
     st.markdown("""
         <div class="footer">
             © Interview Preparation Assistant | Built with <a href="https://streamlit.io" target="_blank" style="color: #888;">Streamlit</a>
