@@ -24,7 +24,6 @@ st.markdown("""
         height: 0%;
         position: fixed;
     }
-
     .main-header {
         text-align: center;
         color: #2E86AB;
@@ -55,6 +54,7 @@ st.markdown("""
     }
     .answer-section {
         color: black;
+        text-color: blue;
         background-color: #f3e5f5;
         padding: 1rem;
         border-radius: 8px;
@@ -66,6 +66,17 @@ st.markdown("""
         border-radius: 5px;
         font-size: 0.9rem;
         margin-bottom: 1rem;
+    }
+    .footer {
+        position: fixed;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: transparent;
+        color: #888;
+        text-align: center;
+        padding: 10px;
+        font-size: 0.9em;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -131,12 +142,11 @@ def main():
                     st.session_state.chatbot.process_user_response(intro)
                     st.session_state.session_started = True
                     
-                    with st.spinner("🤖 Thinking... preparing your first question..."):
-                        bot_message = st.session_state.chatbot.get_next_question(
-                            st.session_state.chat_history,
-                            st.session_state.last_score,
-                            st.session_state.last_concept
-                        )
+                    bot_message = st.session_state.chatbot.get_next_question(
+                        st.session_state.chat_history,
+                        st.session_state.last_score,
+                        st.session_state.last_concept
+                    )
                     st.session_state.chat_history.append(bot_message)
                     st.rerun()
                 else:
@@ -167,83 +177,97 @@ def main():
                 key="answer_input"
             )
             
-            if st.button("📤 Submit Answer", type="primary"):
+            # --- NEW: Create columns for button and spinner ---
+            button_col, spinner_col = st.columns([1, 3])
+
+            with button_col:
+                submit_clicked = st.button("📤 Submit Answer", type="primary")
+
+            if submit_clicked:
                 if answer.strip():
-                    current_question = st.session_state.chat_history[-1]['content'] if st.session_state.chat_history else ""
-                    concept = st.session_state.chatbot.process_user_response(answer, current_question)
-                    st.session_state.chat_history.append({"role": "user", "content": answer})
-                    
-                    # --- START OF LOGIC FIXES ---
-                    
-                    ladder_status = st.session_state.chatbot.get_progress_summary().get('ladder_status', {})
-                    if ladder_status.get('recovery_mode'):
-                        st.session_state.last_score = None
-                        with st.spinner("🤖 Thinking... preparing next recovery question..."):
-                            next_bot_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
-                        st.session_state.chat_history.append(next_bot_message)
-                        st.rerun()
+                    # --- NEW: Show spinner while processing ---
+                    with spinner_col:
+                        with st.spinner("Thinking..."):
+                            current_question = st.session_state.chat_history[-1]['content'] if st.session_state.chat_history else ""
+                            concept = st.session_state.chatbot.process_user_response(answer, current_question)
+                            st.session_state.chat_history.append({"role": "user", "content": answer})
+                            
+                            ladder_status = st.session_state.chatbot.get_progress_summary().get('ladder_status', {})
+                            if ladder_status.get('recovery_mode'):
+                                st.session_state.last_score = None
+                                next_bot_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
+                                st.session_state.chat_history.append(next_bot_message)
+                                st.rerun()
 
-                    score, feedback, correct_answer, feedback_type = st.session_state.evaluator.evaluate_answer(
-                        answer, current_question, concept, "intermediate"
-                    )
-                    
-                    st.session_state.chatbot.set_last_feedback_type(feedback_type)
-                    
-                    if feedback_type == "clarification_request":
-                        st.session_state.last_score = None
-                        with st.spinner("🤖 Rephrasing the question..."):
-                            rephrased_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
-                        st.session_state.chat_history.append(rephrased_message)
-                        st.rerun()
-                    
-                    # --- END OF LOGIC FIXES ---
+                            score, feedback, correct_answer, feedback_type = st.session_state.evaluator.evaluate_answer(
+                                answer, current_question, concept, "intermediate"
+                            )
+                            
+                            st.session_state.chatbot.set_last_feedback_type(feedback_type)
+                            
+                            if feedback_type == "clarification_request":
+                                st.session_state.last_score = None
+                                rephrased_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
+                                st.session_state.chat_history.append(rephrased_message)
+                                st.rerun()
+                            
+                            st.session_state.last_score = score
+                            st.session_state.last_concept = concept
+                            st.session_state.question_count += 1
+                            
+                            if concept:
+                                st.session_state.chatbot.update_progress(concept, score)
 
-                    st.session_state.last_score = score
-                    st.session_state.last_concept = concept
-                    st.session_state.question_count += 1
-                    
-                    if concept:
-                        st.session_state.chatbot.update_progress(concept, score)
-
-                    if score is not None:
-                        st.markdown(f'<div class="score-display">Score: {score}/100</div>', unsafe_allow_html=True)
-                    
-                    if feedback:
-                        st.markdown(f"""
-                        <div class="feedback-section">
-                            <strong>💬 Feedback:</strong><br>
-                            {feedback}
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    if correct_answer:
-                        st.markdown(f"""
-                        <div class="answer-section">
-                            <strong>✅ Correct Answer:</strong><br>
-                            {correct_answer}
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    # Spinner for generating next question
-                    with st.spinner("🤖 Thinking... preparing your next question..."):
-                        next_bot_message = st.session_state.chatbot.get_next_question(
-                            st.session_state.chat_history,
-                            st.session_state.last_score,
-                            st.session_state.last_concept
-                        )
-                    st.session_state.chat_history.append(next_bot_message)
+                            # --- This section now happens inside the spinner ---
+                            if score is not None:
+                                st.session_state.display_score = score
+                            if feedback:
+                                st.session_state.display_feedback = feedback
+                            if correct_answer:
+                                st.session_state.display_correct_answer = correct_answer
+                            
+                            next_bot_message = st.session_state.chatbot.get_next_question(
+                                st.session_state.chat_history,
+                                st.session_state.last_score,
+                                st.session_state.last_concept
+                            )
+                            st.session_state.chat_history.append(next_bot_message)
                     
                     st.rerun()
                 else:
                     st.error("Please provide an answer!")
 
-    # Footer
+            # --- This block now displays the results saved from the previous run ---
+            if 'display_score' in st.session_state and st.session_state.display_score is not None:
+                st.markdown(f'<div class="score-display">Score: {st.session_state.display_score}/100</div>', unsafe_allow_html=True)
+                del st.session_state.display_score
+            
+            if 'display_feedback' in st.session_state and st.session_state.display_feedback:
+                st.markdown(f"""
+                <div class="feedback-section">
+                    <strong>💬 Feedback:</strong><br>
+                    {st.session_state.display_feedback}
+                </div>
+                """, unsafe_allow_html=True)
+                del st.session_state.display_feedback
+
+            if 'display_correct_answer' in st.session_state and st.session_state.display_correct_answer:
+                st.markdown(f"""
+                <div class="answer-section">
+                    <strong>✅ Correct Answer:</strong><br>
+                    {st.session_state.display_correct_answer}
+                </div>
+                """, unsafe_allow_html=True)
+                del st.session_state.display_correct_answer
+
+
+    # --- NEW: Add a footer at the end ---
     st.markdown("""
-    <hr style="margin-top:2rem; margin-bottom:1rem;">
-    <div style="text-align:center; color: gray; font-size: 0.9em;">
-        © 2025 Interview Preparation Assistant | Built using Streamlit
-    </div>
+        <div class="footer">
+            © Interview Preparation Assistant | Built with <a href="https://streamlit.io" target="_blank" style="color: #888;">Streamlit</a>
+        </div>
     """, unsafe_allow_html=True)
+
 
 if __name__ == "__main__":
     main()
