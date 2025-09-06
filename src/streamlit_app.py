@@ -18,9 +18,11 @@ st.set_page_config(
 # Custom CSS for better UI
 st.markdown("""
 <style>
-    /* This new, more specific rule hides ONLY the GitHub icon */
-    a[title="View source"] {
-      display: none !important;
+    /* Hides the Streamlit toolbar containing the GitHub icon */
+    div[data-testid="stToolbar"] {
+        visibility: hidden;
+        height: 0%;
+        position: fixed;
     }
 
     .main-header {
@@ -53,7 +55,6 @@ st.markdown("""
     }
     .answer-section {
         color: black;
-        text-color: blue;
         background-color: #f3e5f5;
         padding: 1rem;
         border-radius: 8px;
@@ -130,11 +131,12 @@ def main():
                     st.session_state.chatbot.process_user_response(intro)
                     st.session_state.session_started = True
                     
-                    bot_message = st.session_state.chatbot.get_next_question(
-                        st.session_state.chat_history,
-                        st.session_state.last_score,
-                        st.session_state.last_concept
-                    )
+                    with st.spinner("🤖 Thinking... preparing your first question..."):
+                        bot_message = st.session_state.chatbot.get_next_question(
+                            st.session_state.chat_history,
+                            st.session_state.last_score,
+                            st.session_state.last_concept
+                        )
                     st.session_state.chat_history.append(bot_message)
                     st.rerun()
                 else:
@@ -173,41 +175,36 @@ def main():
                     
                     # --- START OF LOGIC FIXES ---
                     
-                    # FIX 1: Check for recovery mode BEFORE evaluating the answer
                     ladder_status = st.session_state.chatbot.get_progress_summary().get('ladder_status', {})
                     if ladder_status.get('recovery_mode'):
                         st.session_state.last_score = None
-                        next_bot_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
+                        with st.spinner("🤖 Thinking... preparing next recovery question..."):
+                            next_bot_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
                         st.session_state.chat_history.append(next_bot_message)
                         st.rerun()
 
-                    # Evaluate the answer if not in recovery mode
                     score, feedback, correct_answer, feedback_type = st.session_state.evaluator.evaluate_answer(
                         answer, current_question, concept, "intermediate"
                     )
                     
-                    # Give the feedback type to the chatbot so it can make decisions
                     st.session_state.chatbot.set_last_feedback_type(feedback_type)
                     
-                    # FIX 2: Handle clarification requests AFTER evaluation
                     if feedback_type == "clarification_request":
                         st.session_state.last_score = None
-                        rephrased_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
+                        with st.spinner("🤖 Rephrasing the question..."):
+                            rephrased_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history)
                         st.session_state.chat_history.append(rephrased_message)
                         st.rerun()
                     
                     # --- END OF LOGIC FIXES ---
 
-                    # --- Normal path for displaying results ---
                     st.session_state.last_score = score
                     st.session_state.last_concept = concept
                     st.session_state.question_count += 1
                     
-                    # Update chatbot progress with the new score
                     if concept:
                         st.session_state.chatbot.update_progress(concept, score)
 
-                    # Display results
                     if score is not None:
                         st.markdown(f'<div class="score-display">Score: {score}/100</div>', unsafe_allow_html=True)
                     
@@ -227,17 +224,26 @@ def main():
                         </div>
                         """, unsafe_allow_html=True)
                     
-                    # Get the next question for the next turn
-                    next_bot_message = st.session_state.chatbot.get_next_question(
-                        st.session_state.chat_history,
-                        st.session_state.last_score,
-                        st.session_state.last_concept
-                    )
+                    # Spinner for generating next question
+                    with st.spinner("🤖 Thinking... preparing your next question..."):
+                        next_bot_message = st.session_state.chatbot.get_next_question(
+                            st.session_state.chat_history,
+                            st.session_state.last_score,
+                            st.session_state.last_concept
+                        )
                     st.session_state.chat_history.append(next_bot_message)
                     
                     st.rerun()
                 else:
                     st.error("Please provide an answer!")
+
+    # Footer
+    st.markdown("""
+    <hr style="margin-top:2rem; margin-bottom:1rem;">
+    <div style="text-align:center; color: gray; font-size: 0.9em;">
+        © 2025 Interview Preparation Assistant | Built using Streamlit
+    </div>
+    """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
