@@ -1,7 +1,9 @@
-streamlit
-google-generativeai
+altair==5.5.0
+numpy<2.0.0
+pandas==2.3.2
+protobuf==4.25.3
 python-dotenv
 spacy==3.7.5
-thinc==8.1.12
-numpy<2.0.0
-https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1.tar.gz
+streamlit
+google-generativeai
+en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1.tar.gz
