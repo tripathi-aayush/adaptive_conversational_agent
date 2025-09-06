@@ -18,11 +18,9 @@ st.set_page_config(
 # Custom CSS for better UI
 st.markdown("""
 <style>
-    /* Hides the Streamlit toolbar containing the GitHub icon */
-    div[data-testid="stToolbar"] {
-        visibility: hidden;
-        height: 0%;
-        position: fixed;
+    /* This new, more specific rule hides ONLY the GitHub icon */
+    a[title="View source"] {
+      display: none !important;
     }
     .main-header {
         text-align: center;
@@ -115,8 +113,11 @@ def main():
             </div>
             """, unsafe_allow_html=True)
         
-        # Reset button
-        if st.button("🔄 Reset Session", type="secondary"):
+        # --- NEW: Added a separator for clarity ---
+        st.markdown("---")
+        
+        # --- CHANGED: Made the button primary for better visibility ---
+        if st.button("🔄 Reset Session", type="primary", use_container_width=True):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
@@ -177,7 +178,7 @@ def main():
                 key="answer_input"
             )
             
-            # --- NEW: Create columns for button and spinner ---
+            # Create columns for button and spinner
             button_col, spinner_col = st.columns([1, 3])
 
             with button_col:
@@ -185,7 +186,6 @@ def main():
 
             if submit_clicked:
                 if answer.strip():
-                    # --- NEW: Show spinner while processing ---
                     with spinner_col:
                         with st.spinner("Thinking..."):
                             current_question = st.session_state.chat_history[-1]['content'] if st.session_state.chat_history else ""
@@ -218,7 +218,7 @@ def main():
                             if concept:
                                 st.session_state.chatbot.update_progress(concept, score)
 
-                            # --- This section now happens inside the spinner ---
+                            # Save results to session state to display after the rerun
                             if score is not None:
                                 st.session_state.display_score = score
                             if feedback:
@@ -233,11 +233,13 @@ def main():
                             )
                             st.session_state.chat_history.append(next_bot_message)
                     
+                    # Clear the text input and rerun
+                    st.session_state.answer_input = ""
                     st.rerun()
                 else:
                     st.error("Please provide an answer!")
 
-            # --- This block now displays the results saved from the previous run ---
+            # Display results from the previous run that were saved in session state
             if 'display_score' in st.session_state and st.session_state.display_score is not None:
                 st.markdown(f'<div class="score-display">Score: {st.session_state.display_score}/100</div>', unsafe_allow_html=True)
                 del st.session_state.display_score
@@ -261,7 +263,7 @@ def main():
                 del st.session_state.display_correct_answer
 
 
-    # --- NEW: Add a footer at the end ---
+    # Add a footer at the end
     st.markdown("""
         <div class="footer">
             © Interview Preparation Assistant | Built with <a href="https://streamlit.io" target="_blank" style="color: #888;">Streamlit</a>
