@@ -18,11 +18,9 @@ st.set_page_config(
 # Custom CSS for better UI
 st.markdown("""
 <style>
-    /* Hides the Streamlit toolbar containing the GitHub icon */
-    div[data-testid="stToolbar"] {
-        visibility: hidden;
-        height: 0%;
-        position: fixed;
+    /* This new, more specific rule hides ONLY the GitHub icon */
+    a[title="View source"] {
+      display: none !important;
     }
 
     .main-header {
