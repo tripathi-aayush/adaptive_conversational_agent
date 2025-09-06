@@ -15,20 +15,16 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Hide GitHub repo link (Streamlit default footer)
-hide_footer_css = """
-<style>
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    footer:after {content:''; visibility: hidden;}
-    .viewerBadge_container__1QSob {display: none !important;}
-</style>
-"""
-st.markdown(hide_footer_css, unsafe_allow_html=True)
-
 # Custom CSS for better UI
 st.markdown("""
 <style>
+    /* Hides the Streamlit toolbar containing the GitHub icon */
+    div[data-testid="stToolbar"] {
+        visibility: hidden;
+        height: 0%;
+        position: fixed;
+    }
+
     .main-header {
         text-align: center;
         color: #2E86AB;
