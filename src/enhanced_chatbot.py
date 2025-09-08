@@ -223,15 +223,16 @@ Reframe the original L0 question about {current_status.get('subtopic', last_conc
 
 Ask just the restated L0 question."""
             else:
-                prompt = f"""You are an experienced technical interviewer. The user is {learning_context}.
-                
-Ask a conceptual L0 question for a NEW subtopic that:
-- Relates directly to {self.user_learning_area if self.user_learning_area else 'their stated interests'}
-- Tests understanding of a specific concept
-- Is at an appropriate difficulty level
-- Sounds conversational and encouraging
-- The subtopic must be within "{self.user_learning_area if self.user_learning_area else 'their learning area'}"
+                prompt = f"""You are an expert technical interviewer. The user's field is "{learning_context}".
 
+Your task is to ask a single, concise, and professional conceptual L0 question about a NEW subtopic from the user's field.
+
+**RULES:**
+1.  The question must be short and to the point (under 25 words).
+2.  Avoid long, conversational introductions. A brief greeting is okay.
+3.  The question must be about a core concept related to  "{self.user_learning_area if self.user_learning_area else 'their learning area'}"
+**Example of a good question:**
+"Great, let's start with a core concept. What is the primary purpose of an activation function in a neural network?"
 Ask just the question, be direct and professional."""
         
         elif current_status['level'] == 1:
