@@ -29,6 +29,7 @@ class EnhancedChatbot:
         self.must_answer_l0 = False
         self.in_recovery_mode = False  # Track that we entered recovery due to climb-fail (for clarity, logic driven by tracker)
         self._last_feedback_type = None
+        self.discussed_subtopics = set() #added this line for tracking of subtopics
         
     def get_next_question(self, chat_history, last_score=None, last_concept=None):
         """Get the next question using precise ladder approach"""
@@ -114,6 +115,11 @@ Provide just the rephrased question."""
         if last_score is not None:
             if last_score > 60:  # Correct answer
                 if ladder_status['level'] == 0:  # At L0
+                    # --- START CHANGE 1: Record the successfully discussed topic ---
+                    if last_concept:
+                        self.discussed_subtopics.add(last_concept.lower())
+                    # --- END CHANGE 1 ---
+
                     if self.must_answer_l0:
                         # L0 answered correctly after climbing up - now switch subtopic
                         self.ladder_tracker.reset_for_new_subtopic()
@@ -223,6 +229,8 @@ Reframe the original L0 question about {current_status.get('subtopic', last_conc
 
 Ask just the restated L0 question."""
             else:
+                # --- START CHANGE 2: Update the prompt to avoid discussed topics ---
+                discussed_topics_str = ", ".join(self.discussed_subtopics) if self.discussed_subtopics else "None"
                 prompt = f"""You are an expert technical interviewer. The user's field is "{self.user_learning_area}".
 
 Your task is to ask a single, concise, and professional conceptual L0 question about a NEW subtopic from the user's field.
@@ -231,6 +239,7 @@ Your task is to ask a single, concise, and professional conceptual L0 question a
 1.  The question must be short and to the point (under 25 words).
 2.  Avoid long, conversational introductions. A brief greeting is okay.
 3.  The question must be about a core concept related to  "{self.user_learning_area if self.user_learning_area else 'their learning area'}"
+4.  **CRITICAL**: Avoid asking about topics already discussed: [{discussed_topics_str}]
 **Example of a good question:**
 "Great, let's start with a core concept. What is the primary purpose of an activation function in a neural network?"
 Ask just the question, be direct and professional."""
