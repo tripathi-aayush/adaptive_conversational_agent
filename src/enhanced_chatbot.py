@@ -223,7 +223,7 @@ Reframe the original L0 question about {current_status.get('subtopic', last_conc
 
 Ask just the restated L0 question."""
             else:
-                prompt = f"""You are an expert technical interviewer. The user's field is "{learning_context}".
+                prompt = f"""You are an expert technical interviewer. The user's field is "{self.user_learning_area}".
 
 Your task is to ask a single, concise, and professional conceptual L0 question about a NEW subtopic from the user's field.
 
