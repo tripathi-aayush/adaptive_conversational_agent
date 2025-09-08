@@ -246,17 +246,20 @@ Now guide them up to L1 by building on their understanding:
                 
 Ask just the L1 question that builds on their understanding."""
             else:
-                prompt = f"""The user struggled with the L0 question about {current_status.get('subtopic', last_concept)}. 
-                
-Start with "No worries, let's go basic..." then ask a foundational term check:
-- Focus on defining a key term or concept
-- Use guiding questions: "What do you mean by..." or "How would you define..."
-- Break down into fundamental components
-- Never reveal the answer directly
-- Related to {self.user_learning_area if self.user_learning_area else 'their learning area'}
+                prompt = f"""The user struggled with the L0 question about the subtopic: "{current_status.get('subtopic', last_concept)}".
 
-Format: "No worries, let's go basic—[foundational question]"
-Ask just the question."""
+Your task is to ask a simpler, foundational L1 question to check their understanding of a core component of that EXACT SAME subtopic.
+
+**CRITICAL RULES:**
+1.  Your question MUST be about a term or concept directly within "{current_status.get('subtopic', last_concept)}".
+2.  Do NOT switch to a new topic or a general programming concept.
+3.  Generate a brief, natural, and supportive intro phrase (3-5 words) before the question. Avoid using the exact same phrase every time.
+
+**Example of a good complete response (if L0 was about loss functions):**
+"Okay, let's break that down. What is the difference between a 'prediction' and a 'label'?"
+
+Now, generate your own response for the subtopic "{current_status.get('subtopic', last_concept)}". Ask just the question, framed by your supportive intro.
+"""
         
         elif current_status['level'] == 2:
             if self.climbing_up:
