@@ -340,27 +340,65 @@ Ask just the new L0 question for a different subtopic."""
                 fallback = f"{level_label}: {fallback}"
             return fallback
     
+    # In enhanced_chatbot.py, replace the entire _extract_user_learning_area method
+
     def _extract_user_learning_area(self, chat_history):
-        """Extract the user's stated learning area from their introduction"""
+        """
+        Dynamically extracts the user's learning area using the LLM,
+        with a static keyword search as a fallback.
+        """
+        user_intro = ""
         for message in chat_history:
             if message["role"] == "user":
-                user_input = message["content"].lower()
-                # Look for learning indicators
-                learning_phrases = ["learning", "studying", "working on", "interested in", "focusing on"]
-                for phrase in learning_phrases:
-                    if phrase in user_input:
-                        # Extract the topic after the learning phrase
-                        parts = user_input.split(phrase)
-                        if len(parts) > 1:
-                            topic_part = parts[1].strip()
-                            # Clean up common words and extract the main topic
-                            topic_part = topic_part.replace("about", "").replace("on", "").strip()
-                            if topic_part:
-                                # Take the first few words as the learning area
-                                self.user_learning_area = topic_part.split()[0:3]  # Take up to 3 words
-                                self.user_learning_area = " ".join(self.user_learning_area)
-                                break
+                user_intro = message["content"]
                 break
+
+        if not user_intro:
+            return
+
+        # --- Layer 1: Try the dynamic LLM extraction first ---
+        try:
+            extraction_prompt = f"""
+Analyze the user's introduction to identify their specific technical field of study or interest.
+
+USER INTRODUCTION: "{user_intro}"
+
+Instructions:
+1.  Identify the primary technical topic (e.g., "neural networks", "wireless communications", "data analytics").
+2.  Extract and return ONLY the name of that topic.
+3.  Keep it concise (2-4 words is ideal).
+4.  If no specific technical topic is mentioned, return the single word "None".
+
+Topic:
+"""
+            response = self.model.generate_content(extraction_prompt)
+            extracted_topic = response.text.strip()
+            
+            if extracted_topic.lower() != 'none' and extracted_topic:
+                self.user_learning_area = extracted_topic
+                print(f"DEBUG: Dynamically extracted learning area: {self.user_learning_area}")
+                return # Success! Exit the function.
+
+        except Exception as e:
+            print(f"DEBUG: LLM topic extraction failed with error: {e}. Proceeding to fallback.")
+
+        # --- Layer 2: Fallback to static keyword search if LLM fails or finds nothing ---
+        print("DEBUG: LLM extraction failed or found nothing. Falling back to static keyword search.")
+        learning_phrases = [
+            "learning", "studying", "working on", "interested in", "focusing on",
+            "research field is", "research domain is", "field is", "domain is", "background is"
+        ]
+        user_input_lower = user_intro.lower()
+        
+        for phrase in learning_phrases:
+            if phrase in user_input_lower:
+                parts = user_input_lower.split(phrase)
+                if len(parts) > 1:
+                    topic_part = parts[1].strip().replace("about", "").replace("on", "").strip()
+                    if topic_part:
+                        self.user_learning_area = " ".join(topic_part.split()[:4])
+                        print(f"DEBUG: Statically extracted learning area: {self.user_learning_area}")
+                        return # Success! Exit the function.
 
     def process_user_response(self, user_input, current_question=""):
         """Process user response and extract concepts"""
