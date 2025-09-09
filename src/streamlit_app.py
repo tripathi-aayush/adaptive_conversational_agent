@@ -34,6 +34,8 @@ st.markdown("""
         margin: 0.5rem 0;
         border-radius: 10px;
         border-left: 4px solid #2E86AB;
+        /* NEW: Added white text color for contrast */
+        color: white;
         background-color: #0400e8;
     }
     .score-display {
@@ -46,21 +48,25 @@ st.markdown("""
         margin: 1rem 0;
     }
     .feedback-section {
-        color: black;
-        background-color: #e3f2fd;
+        /* CHANGED: Replaced hardcoded colors with theme variables for light/dark mode compatibility */
+        color: var(--text-color);
+        background-color: var(--secondary-background-color);
         padding: 1rem;
         border-radius: 8px;
         margin: 1rem 0;
     }
     .answer-section {
-        color: black;
-        text-color: blue;
-        background-color: #f3e5f5;
+        /* CHANGED: Replaced hardcoded colors with theme variables */
+        color: var(--text-color);
+        background-color: var(--secondary-background-color);
+        border: 1px solid #A23B72; /* Added a border to distinguish it */
         padding: 1rem;
         border-radius: 8px;
         margin: 1rem 0;
     }
     .ladder-status {
+        /* CHANGED: text color now adaptive */
+        color: var(--text-color);
         background-color: #fff3e0;
         padding: 0.5rem;
         border-radius: 5px;
@@ -73,7 +79,9 @@ st.markdown("""
         bottom: 0;
         width: 100%;
         background-color: transparent;
-        color: #888;
+        /* CHANGED: Replaced hardcoded color and made slightly transparent */
+        color: var(--text-color);
+        opacity: 0.7;
         text-align: center;
         padding: 10px;
         font-size: 0.9em;
@@ -157,7 +165,7 @@ def main():
             for i, message in enumerate(st.session_state.chat_history):
                 if message["role"] == "user":
                     st.markdown(f"""
-                    <div class="chat-message" style="background-color: #06402B; border-left-color: #4CAF50;">
+                    <div class="chat-message" style="background-color: #06402B; border-left-color: #4CAF50; color: white;">
                         <strong>You:</strong> {message["content"]}
                     </div>
                     """, unsafe_allow_html=True)
