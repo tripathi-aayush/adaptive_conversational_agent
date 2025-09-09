@@ -15,10 +15,22 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS
+# Custom CSS to hide the toolbar and apply custom styles
 st.markdown("""
 <style>
-    a[title="View source"] { display: none !important; }
+    /* Hides the Streamlit toolbar containing the menu and GitHub icon */
+    div[data-testid="stToolbar"] {
+        visibility: hidden;
+        height: 0%;
+        position: fixed;
+    }
+    div[data-testid="stDecoration"] {
+        visibility: hidden;
+        height: 0%;
+        position: fixed;
+    }
+
+    /* Your custom styles */
     .main-header { text-align: center; color: #2E86AB; margin-bottom: 2rem; }
     .chat-message { padding: 1rem; margin: 0.5rem 0; border-radius: 10px; border-left: 4px solid #2E86AB; color: white; background-color: #0400e8; }
     .score-display { background: linear-gradient(90deg, #2E86AB, #A23B72); color: white; padding: 0.5rem 1rem; border-radius: 20px; text-align: center; font-weight: bold; margin: 1rem 0; }
@@ -97,7 +109,7 @@ def main():
                 if st.session_state.answer_input.strip():
                     st.session_state.submitted_answer = st.session_state.answer_input
                     st.session_state.processing = True
-                    st.session_state.answer_input = "" # Clear the input box immediately
+                    st.session_state.answer_input = ""  # Clear the input box
                 else:
                     st.error("Please provide an answer!")
 
@@ -107,14 +119,12 @@ def main():
 
             button_col, status_col = st.columns([1, 4])
             with button_col:
-                # This is now the ONLY submit button
                 st.button("📤 Submit Answer", type="primary", on_click=handle_submission)
 
             # Check for the processing flag set by the callback
             if st.session_state.processing:
                 with status_col:
                     with st.spinner("Thinking..."):
-                        # Retrieve the stored answer
                         answer = st.session_state.submitted_answer
                         current_question = st.session_state.chat_history[-1]['content']
                         st.session_state.chat_history.append({"role": "user", "content": answer})
@@ -131,16 +141,13 @@ def main():
                             st.session_state.question_count += 1
                             if concept: st.session_state.chatbot.update_progress(concept, score)
 
-                            # Set display variables for the next run
                             if score is not None: st.session_state.display_score = score
                             if feedback: st.session_state.display_feedback = feedback
                             if correct_answer: st.session_state.display_correct_answer = correct_answer
 
-                        # Get the next question and update history
                         next_bot_message = st.session_state.chatbot.get_next_question(st.session_state.chat_history, st.session_state.last_score, st.session_state.last_concept)
                         st.session_state.chat_history.append(next_bot_message)
 
-                        # Reset flags and rerun to display the new state
                         st.session_state.processing = False
                         st.session_state.submitted_answer = ""
                         st.rerun()
