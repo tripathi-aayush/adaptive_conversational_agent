@@ -246,15 +246,17 @@ Ask just the question, be direct and professional."""
         
         elif current_status['level'] == 1:
             if self.climbing_up:
-                prompt = f"""Great! The learner answered correctly at L2: "{self.last_correct_answer}"
-                
-Now guide them up to L1 by building on their understanding:
-- Use their answer to frame the next level up
-- Connect to broader concepts in {current_status.get('subtopic', last_concept)}
-- Use encouraging language: "Nice! With that in mind..." or "Great! Using your idea of..."
-- Help them see the bigger picture
-                
-Ask just the L1 question that builds on their understanding."""
+                prompt = f"""The learner answered L2 correctly: "{self.last_correct_answer}"
+Build on this specific answer to ask the next logical question to get back to the L1 level of understanding the subtopic '{current_status.get('subtopic', last_concept)}'.
+
+**CRITICAL RULES:**
+1.  Ask only **one, single question**.
+2.  Keep the question **short and direct** (under 30 words).
+3.  Do NOT ask a philosophical or overly complex question.
+4.  Maintain a conversational interview tone.
+
+Ask just the L1 question.
+"""
             else:
                 prompt = f"""The user struggled with the L0 question about the subtopic: "{current_status.get('subtopic', last_concept)}".
 
