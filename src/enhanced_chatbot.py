@@ -18,7 +18,7 @@ class EnhancedChatbot:
     def __init__(self):
         self.memory = EnhancedKeywordMemory()
         self.ladder_tracker = LadderTracker()
-        self.model = genai.GenerativeModel('gemini-2.5-pro')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
         self.conversation_count = 0
         self.current_concept = None
         self.user_learning_area = None
