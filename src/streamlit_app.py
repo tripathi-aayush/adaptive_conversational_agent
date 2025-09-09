@@ -15,22 +15,23 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Custom CSS to hide the toolbar and apply custom styles
+# Custom CSS with rules to hide the header icons
 st.markdown("""
 <style>
-    /* Hides the Streamlit toolbar containing the menu and GitHub icon */
+    /* Hides the Streamlit toolbar containing the menu, share, and other icons */
     div[data-testid="stToolbar"] {
         visibility: hidden;
         height: 0%;
         position: fixed;
     }
+    /* Hides the Streamlit decoration that contains "View source" and "Report a bug" */
     div[data-testid="stDecoration"] {
         visibility: hidden;
         height: 0%;
         position: fixed;
     }
 
-    /* Your custom styles */
+    /* Your existing custom styles */
     .main-header { text-align: center; color: #2E86AB; margin-bottom: 2rem; }
     .chat-message { padding: 1rem; margin: 0.5rem 0; border-radius: 10px; border-left: 4px solid #2E86AB; color: white; background-color: #0400e8; }
     .score-display { background: linear-gradient(90deg, #2E86AB, #A23B72); color: white; padding: 0.5rem 1rem; border-radius: 20px; text-align: center; font-weight: bold; margin: 1rem 0; }
@@ -109,7 +110,7 @@ def main():
                 if st.session_state.answer_input.strip():
                     st.session_state.submitted_answer = st.session_state.answer_input
                     st.session_state.processing = True
-                    st.session_state.answer_input = ""  # Clear the input box
+                    st.session_state.answer_input = "" # Clear the input box immediately
                 else:
                     st.error("Please provide an answer!")
 
