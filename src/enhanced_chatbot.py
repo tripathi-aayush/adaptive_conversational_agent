@@ -106,8 +106,12 @@ Topics:
         # The prompts for L+1, L+2, and L+3 are now calibrated for a realistic interview setting.
         prompt_map = {
             3: f"Ask an advanced 'L+3' question about '{subtopic}'. This could be a challenging question a candidate might face for a senior role, involving synthesis or comparison. Avoid extremely niche academic jargon. CRITICAL: Ask only ONE, single, concise question.",
-            2: f"Ask a practical 'L+2' question about '{subtopic}'. It should ask about a common application or a real-world trade-off relevant to a job applicant in this field. CRITICAL: Ask only ONE, single, concise question.",
-            1: f"Ask a follow-up technical 'L+1' question that builds on the core idea of '{subtopic}'. The question should be appropriate for a senior student or entry-level job candidate, testing a slightly deeper understanding. CRITICAL: Ask only ONE, single, concise question.",
+            2: f"""You are an interviewer asking a practical case-based question. 
+                First, briefly describe a simple, real-world scenario or problem. 
+                Then, ask a single, direct 'L+2' question about how '{subtopic}' could be applied to solve that problem.
+                The scenario must be straightforward and the question practical, not academic.
+                CRITICAL: Your entire response must be just the single question, including the brief scenario.""",
+            1: f"Ask a follow-up technical 'L+1' question that builds on the core idea of '{subtopic}'. The question should be appropriate for a senior student or entry-level job candidate, testing a moderate understanding. CRITICAL: Ask only ONE, single, concise question.",
             0: f"Ask a foundational, core concept 'L0' question about '{subtopic}'. This should be a standard interview question for this topic. CRITICAL: Ask only ONE, single, concise question.",
             -1: f"The user is struggling. Ask a simpler 'L-1' question about a key component or a prerequisite concept for '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
             -2: f"The user needs more help. Ask a very simple 'L-2' definition-based question about a fundamental term within '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
