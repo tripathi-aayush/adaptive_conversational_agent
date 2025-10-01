@@ -7,3 +7,7 @@ spacy==3.7.5
 streamlit
 google-generativeai
 en-core-web-md @ https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.7.1/en_core_web_md-3.7.1.tar.gz
+keybert
+transformers
+torch
+sentence-transformers

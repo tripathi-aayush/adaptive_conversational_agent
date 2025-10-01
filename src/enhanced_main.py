@@ -55,8 +55,8 @@ def main():
     evaluator = EnhancedEvaluator()
     system_prompt = load_prompt()
     
-    # Initialize chat history
-    chat_history = [{"role": "system", "content": system_prompt}]
+    # Initialize chat history (system prompt is not needed for the new logic, but harmless)
+    chat_history = []
     
     # Get introduction
     print("Let's start! Please introduce yourself and mention your technical background:")
@@ -68,7 +68,7 @@ def main():
     
     print()
     chat_history.append({"role": "user", "content": intro})
-    chatbot.process_user_response(intro)
+    # NOTE: The initial keyword seeding is now handled inside the first get_next_question call
     
     question_count = 0
     last_score = None
@@ -99,19 +99,9 @@ def main():
             
             print()  # Add spacing
             
-            # Process response and get concept
+            # Process response to find new keywords for the topic queue
             concept = chatbot.process_user_response(user_reply, question)
             chat_history.append({"role": "user", "content": user_reply})
-            
-            # This ensures no score/feedback/correct-answer appears and prevents ladder logic from using a score.
-            ladder_status = chatbot.get_progress_summary().get('ladder_status', {})
-            if ladder_status.get('recovery_mode'):
-                # Do not evaluate, do not set last_score
-                last_score = None
-                last_concept = concept  # keep concept memory if any
-                question_count += 1
-                # Immediately move to next off-topic question
-                continue
             
             # Evaluate the answer
             score, feedback, correct_answer, feedback_type = evaluator.evaluate_answer(
@@ -121,18 +111,22 @@ def main():
             chatbot.set_last_feedback_type(feedback_type)
 
             if feedback_type == "clarification_request":
-                print(f"... {feedback}") # Prints "Clarification requested" or similar
-                last_score = None # Ensure no score is carried over
+                print(f"Okay, let me rephrase...")
+                last_score = None # Ensure no score is carried over for ladder logic
                 continue # Skip to the next loop to get the rephrased question
             
+            # We must have a score to proceed with the logic
+            if score is None:
+                print("Could not determine a score. Let's try another question.")
+                last_score = None # Reset score
+                continue
+
             print_score_feedback(score, feedback, feedback_type)
             
             if correct_answer and correct_answer.strip():
                 print(f"✅ CORRECT ANSWER: {correct_answer}\n")
             
-            # Update progress
-            if concept:
-                chatbot.update_progress(concept, score)
+            # REMOVED: The chatbot.update_progress call is no longer needed.
             
             # Store for next iteration
             last_score = score
