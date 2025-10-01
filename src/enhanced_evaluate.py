@@ -14,7 +14,7 @@ genai.configure(api_key=api_key)
 
 class EnhancedEvaluator:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-pro')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
     
     def evaluate_answer(self, user_answer, question, concept=None, difficulty="intermediate"):
         """Enhanced evaluation with both feedback and correct answer always provided"""
