@@ -14,7 +14,7 @@ genai.configure(api_key=api_key)
 
 class EnhancedEvaluator:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-2.5-flash')
+        self.model = genai.GenerativeModel('gemini-pro')
     
     def evaluate_answer(self, user_answer, question, concept=None, difficulty="intermediate"):
         """Enhanced evaluation with both feedback and correct answer always provided"""
@@ -46,34 +46,35 @@ Respond with ONLY the classification type, nothing else.
         except Exception as e:
             # Fallback to basic empty check if LLM classification fails
             user_lower = user_answer.strip().lower()
-            if user_lower in ["", "nah", "skip"]:
+            if user_lower in ["", "nah", "skip", "i don't know", "idk"]:
                 correct_answer = self._get_correct_answer(question, concept, score=0)
                 return 0, "No answer provided.", correct_answer, "zero_knowledge"
         
-        # Updated prompt to always generate both feedback AND the answer
+        # --- THIS IS THE UPDATED PART ---
+        # The persona is now a "friendly tutor" and the scoring is explicitly lenient.
         prompt = f"""
-You are a technical interviewer giving feedback and the correct answer.
+You are a friendly and encouraging tutor. Your goal is to build the user's confidence.
 
 Question: {question}
 Student's answer: {user_answer}
 
-CRITICAL: Always provide BOTH feedback AND the correct answer.
+SCORING RULES (Be Lenient!):
+- Be generous with points. Award partial credit for any signs of understanding or genuine effort.
+- If the user is on the right track at all, give them a score above 60.
+- Only give a score below 40 if the answer is completely unrelated to the question.
 
-Feedback rules:
-- Score ≥ 80: Just say "Correct" or "Good" (1-2 words max)
-- Score 60-79: Brief hint about what to improve (1 line)
-- Score 40-59: Point out the gap (what they missed)
-- Score ≤ 39: Identify what's wrong with their response
+FEEDBACK RULES:
+- Always be positive and encouraging.
+- For high scores (≥ 80), praise them (e.g., "Excellent!", "Great answer!").
+- For medium scores (60-79), start with encouragement and then give a small hint for improvement (e.g., "Good start! To make it perfect, also mention...").
+- For low scores (< 60), be gentle and focus on the core concept they missed (e.g., "That's a common point of confusion. The key idea to remember is...").
 
-Answer rules:
-- Score > 80: Concise 1-2 line answer (quick confirmation)
-- Score ≤ 80: Detailed paragraph explanation for understanding
-- Focus on key recall points only, no background history
+CRITICAL: Always provide BOTH a score, feedback, AND the correct answer.
 
 Format:
 Score: <number>
-Feedback: <feedback based on score>
-Answer: <correct answer with appropriate detail>
+Feedback: <your encouraging feedback>
+Answer: <the correct answer, explained clearly for a learner>
 """
 
         try:
@@ -132,9 +133,9 @@ Answer: <correct answer with appropriate detail>
     def _get_correct_answer(self, question, concept=None, score=50):
         """Get a correct answer with detail level based on score"""
         if score > 80:
-            detail_instruction = "Give a concise 1-2 line answer, like a quick confirmation in an interview."
+            detail_instruction = "Give a concise 1-2 line answer, like a quick confirmation."
         else:
-            detail_instruction = "Give a detailed paragraph explanation for better understanding."
+            detail_instruction = "Give a detailed paragraph explanation for a learner."
         
         prompt = f"""
 Give the correct answer to: {question}
@@ -151,25 +152,3 @@ Requirements:
             return response.text.strip()
         except:
             return "Let me give you the key points you need to remember."
-    
-    def generate_follow_up_question(self, concept, difficulty="intermediate", focus_area=None):
-        """Generate a follow-up question on the same concept"""
-        prompt = f"""
-Generate a {difficulty} level follow-up question about: {concept}
-
-{f"Focus specifically on: {focus_area}" if focus_area else ""}
-
-The question should:
-- Help reinforce understanding of {concept}
-- Be at {difficulty} difficulty level
-- Be clear and specific
-- Test practical understanding
-
-Provide just the question, no extra text.
-"""
-        
-        try:
-            response = self.model.generate_content(prompt)
-            return response.text.strip()
-        except Exception as e:
-            return f"Can you explain more about {concept}?"
