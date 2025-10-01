@@ -115,7 +115,7 @@ Topics:
         prompt_map = {
             3: f"Ask a tricky, expert-level 'L+3' question about '{subtopic}'. This could involve synthesizing multiple concepts, comparing it to an alternative, or analyzing a potential edge case. CRITICAL: Ask only ONE, single, concise question.",
             2: f"Ask a practical 'L+2' question about '{subtopic}'. It should ask the user to consider a simple real-world scenario, an application, or a common trade-off. CRITICAL: Ask only ONE, single, concise question.",
-            1: f"Ask a conceptual 'L+1' question about a specific component, property, or mechanism within the broader topic of '{subtopic}'. The question should remain theoretical, not practical. CRITICAL: Ask only ONE, single, concise question.",
+            1: f"Ask a conceptual 'L+1' question about a specific sub subtopic within, property, or mechanism within the broader topic of '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
             0: f"Ask a foundational, core concept 'L0' question about '{subtopic}'. This should be a standard interview question for this topic. CRITICAL: Ask only ONE, single, concise question.",
             -1: f"The user is struggling. Ask a simpler 'L-1' question about a key component or a prerequisite concept for '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
             -2: f"The user needs more help. Ask a very simple 'L-2' definition-based question about a fundamental term within '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
