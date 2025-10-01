@@ -22,7 +22,6 @@ class EnhancedChatbot:
         self.session_started = False
         self._last_feedback_type = None
         
-        # New: Topic queue for dynamic conversation flow
         self.topic_queue = []  # Stores tuples of (source, topic_name)
         self.initial_seeding_done = False
 
@@ -36,7 +35,6 @@ class EnhancedChatbot:
         
         if (hasattr(self, '_last_feedback_type') and 
             self._last_feedback_type == "clarification_request"):
-            # This now correctly returns a dictionary
             return self._rephrase_current_question(chat_history)
         
         question_text = self._generate_contextual_question(
@@ -57,15 +55,12 @@ class EnhancedChatbot:
         try:
             prompt = f"""
 Analyze the user's introduction to identify up to 3 core technical topics they mentioned.
-
 USER INTRODUCTION: "{user_intro}"
-
 Instructions:
 1. Identify the main technical topics (e.g., "neural networks", "convex optimization").
 2. List up to 3 of the most important ones.
 3. Format them as a comma-separated list.
 4. If no specific topics are found, return "None".
-
 Topics:
 """
             response = self.model.generate_content(prompt)
@@ -73,53 +68,50 @@ Topics:
             
             if topics_str.lower() != 'none':
                 topics = [topic.strip() for topic in topics_str.split(',') if topic.strip()]
-                for topic in topics[:3]: # Ensure at max 3
+                for topic in topics[:3]:
                     self.topic_queue.append(('initial', topic))
             self.initial_seeding_done = True
             
         except Exception as e:
             print(f"Error seeding initial topics: {e}")
-            self.initial_seeding_done = True # Avoid retrying
+            self.initial_seeding_done = True
 
     def _generate_contextual_question(self, chat_history, last_score=None):
         """Generate a question based on the new bidirectional ladder and topic queue."""
         current_status = self.ladder_tracker.get_status()
-        topic_source = 'initial' # Default source
+        topic_source = 'initial'
         
-        # Rule: If user fails at L+1, L+2, or L+3, immediately switch topic.
         if current_status['level'] > 0 and last_score is not None and last_score < 60:
             self.ladder_tracker.reset_for_new_subtopic()
-            current_status = self.ladder_tracker.get_status() # Refresh status
-        # Normal ladder movement for all other cases
+            current_status = self.ladder_tracker.get_status()
         elif last_score is not None:
             if last_score >= 60:
                 self.ladder_tracker.go_up_ladder()
             else:
                 self.ladder_tracker.go_down_ladder()
         
-        # Check if we need to pick a new topic
         if not self.ladder_tracker.current_subtopic:
             if not self.topic_queue:
                 return "We've covered all the topics based on our conversation. Would you like to suggest a new area to discuss?"
             
-            # Randomly pick a new topic and remove it from the queue
             topic_source, topic_name = random.choice(self.topic_queue)
             self.topic_queue.remove((topic_source, topic_name))
             self.ladder_tracker.assign_subtopic(topic_name, reset=True)
         
-        # Get refreshed status for prompt generation
         current_status = self.ladder_tracker.get_status()
         level = current_status['level']
         subtopic = current_status['subtopic']
         
+        # --- THIS IS THE UPDATED PART ---
+        # The prompts for L+1, L+2, and L+3 are now calibrated for a realistic interview setting.
         prompt_map = {
-            3: f"Ask a tricky, expert-level 'L+3' question about '{subtopic}'. This could involve synthesizing multiple concepts, comparing it to an alternative, or analyzing a potential edge case. CRITICAL: Ask only ONE, single, concise question.",
-            2: f"Ask a practical 'L+2' question about '{subtopic}'. It should ask the user to consider a simple real-world scenario, an application, or a common trade-off. CRITICAL: Ask only ONE, single, concise question.",
-            1: f"Ask a conceptual 'L+1' question about a specific sub subtopic within, property, or mechanism within the broader topic of '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
+            3: f"Ask an advanced 'L+3' question about '{subtopic}'. This could be a challenging question a candidate might face for a senior role, involving synthesis or comparison. Avoid extremely niche academic jargon. CRITICAL: Ask only ONE, single, concise question.",
+            2: f"Ask a practical 'L+2' question about '{subtopic}'. It should ask about a common application or a real-world trade-off relevant to a job applicant in this field. CRITICAL: Ask only ONE, single, concise question.",
+            1: f"Ask a follow-up technical 'L+1' question that builds on the core idea of '{subtopic}'. The question should be appropriate for a senior student or entry-level job candidate, testing a slightly deeper understanding. CRITICAL: Ask only ONE, single, concise question.",
             0: f"Ask a foundational, core concept 'L0' question about '{subtopic}'. This should be a standard interview question for this topic. CRITICAL: Ask only ONE, single, concise question.",
             -1: f"The user is struggling. Ask a simpler 'L-1' question about a key component or a prerequisite concept for '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
             -2: f"The user needs more help. Ask a very simple 'L-2' definition-based question about a fundamental term within '{subtopic}'. CRITICAL: Ask only ONE, single, concise question.",
-            -3: f"The user is at the most basic level. Ask an extremely simple 'L-3' true/false or multiple-choice style question to build confidence on '{subtopic}'. CRITICAL: Ask only ONE, single, concise question."
+            -3: f"The user is at the most basic level. Ask an extremely simple 'L-3' question (e.g., true/false) to build confidence on '{subtopic}'. CRITICAL: Ask only ONE, single, concise question."
         }
         
         prompt = prompt_map.get(level, prompt_map[0])
@@ -169,24 +161,18 @@ Topics:
         
         prompt = f"""The learner asked for clarification on this question: "{last_question}"
 Rephrase the same question more clearly while keeping the same meaning and difficulty level.
-Use simpler words. Provide just the rephrased question."""
+Use simpler words and be encouraging. Provide just the rephrased question."""
         
         try:
             response = self.model.generate_content(prompt)
             question = response.text.strip()
             original_label = last_question.split(':')[0] if ':' in last_question else 'L0'
             
-            # --- FIX ---
-            # Was: return f"{original_label}: {question}"
-            # Now: Return a dictionary to match the expected format.
             return {
                 "role": "assistant",
                 "content": f"{original_label}: {question}"
             }
         except Exception:
-            # --- FIX ---
-            # Was: return last_question
-            # Now: Return a dictionary to match the expected format.
             return {
                 "role": "assistant",
                 "content": last_question
