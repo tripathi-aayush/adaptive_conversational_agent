@@ -139,7 +139,7 @@ def main():
             
             intro = st.text_area(
                 "Your introduction:",
-                placeholder="Hi, I'm a student focusing on machine learning, convex optimization, and UAV communication...",
+                placeholder="Hi, I'm a student focusing on ...",
                 height=100
             )
             
