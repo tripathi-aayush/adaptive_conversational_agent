@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from enhanced_chatbot import EnhancedChatbot
 from enhanced_evaluate import EnhancedEvaluator
 import time
+import random
 
 # Load environment variables
 load_dotenv()
@@ -20,7 +21,8 @@ st.set_page_config(
 def stream_text(text):
     for word in text.split(" "):
         yield word + " "
-        time.sleep(0.04)
+        time.sleep(random.uniform(0.03, 0.07))
+
 
 # --- Custom Modern CSS ---
 st.markdown("""
@@ -197,9 +199,15 @@ def main():
                 st.markdown(f"<div class='chat-bubble-user'>{message['content']}</div>", unsafe_allow_html=True)
             else:
                 if not message.get("streamed", False):
-                    bot_text = "".join([w for w in stream_text(message["content"])])
-                    st.markdown(f"<div class='chat-bubble-bot'>{bot_text}</div>", unsafe_allow_html=True)
+                    placeholder = st.empty()
+                    typed_text = ""
+                    for word in message["content"].split(" "):
+                        typed_text += word + " "
+                        placeholder.markdown(f"<div class='chat-bubble-bot'>{typed_text}</div>", unsafe_allow_html=True)
+                        time.sleep(random.uniform(0.03, 0.07))
+
                     message["streamed"] = True
+
                 else:
                     st.markdown(f"<div class='chat-bubble-bot'>{message['content']}</div>", unsafe_allow_html=True)
 
