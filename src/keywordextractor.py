@@ -1,5 +1,4 @@
-from keybert import KeyBERT # type: ignore
-
+from keybert import KeyBERT #type: ignore
 # Initialize the KeyBERT model. 
 # This will be done only once when the module is first imported.
 kw_model = KeyBERT()
